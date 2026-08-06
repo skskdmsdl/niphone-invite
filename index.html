@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#0F1419" />
+  <title>니폰내폰 초대</title>
+  <style>
+    :root { --bg:#0F1419; --surface:#1A1F26; --accent:#00D9FF; --muted:#8b96a3; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:#fff;
+      font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .card { width:100%; max-width:400px; text-align:center; }
+    .logo { font-size:28px; font-weight:800; letter-spacing:-.5px; }
+    .sub { color:var(--accent); font-weight:700; margin:6px 0 0; font-size:15px; }
+    .desc { color:var(--muted); font-size:14px; line-height:1.6; margin:18px 0 20px; }
+    .code {
+      background:var(--surface); border:1px solid rgba(0,217,255,.3); border-radius:12px;
+      padding:14px 16px; font-size:15px; font-weight:700; letter-spacing:.3px; word-break:break-all;
+      color:#e6edf3; margin-bottom:22px;
+    }
+    .btn {
+      display:block; width:100%; border:none; border-radius:12px; padding:16px;
+      font-size:16px; font-weight:700; cursor:pointer; text-decoration:none; margin-bottom:12px;
+    }
+    .primary { background:var(--accent); color:#00252e; }
+    .stores { margin-top:26px; }
+    .stores .small { color:var(--muted); font-size:13px; margin:0 0 12px; }
+    .badge {
+      display:inline-block; background:rgba(124,58,237,.18); color:#c4b5fd;
+      border:1px solid rgba(124,58,237,.4); border-radius:999px; padding:2px 10px; font-size:12px; font-weight:700;
+    }
+    .store {
+      background:var(--surface); color:#e6edf3; border:1px solid #2a323c;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .hint { color:var(--muted); font-size:14px; line-height:1.6; margin-top:20px; }
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo">니폰내폰</div>
+    <p class="sub">화면 공유 초대</p>
+    <p class="desc">상대방이 화면 공유에 초대했어요.<br />아래 버튼을 눌러 바로 참여하세요.</p>
+    <div class="code" id="code">코드를 불러오는 중…</div>
+
+    <button id="openBtn" class="btn primary">니폰내폰 앱에서 열기</button>
+
+    <div class="stores" id="stores">
+      <p class="small">앱이 아직 없으신가요? <span class="badge">곧 출시 예정</span></p>
+      <a id="androidBtn" class="btn store" href="#">▶  Google Play에서 받기</a>
+      <a id="iosBtn" class="btn store" href="#"> App Store에서 받기</a>
+    </div>
+
+    <p class="hint hidden" id="deskHint">
+      휴대폰(iOS·Android)에서 이 링크를 열어 주세요.<br />연결 코드: <b id="deskCode"></b>
+    </p>
+  </main>
+
+  <script>
+    // ── 출시 때 이 값들만 채우면 됩니다 ──────────────────────────
+    var CONFIG = {
+      scheme: 'niphone-naephone',
+      androidPackage: 'com.example.niphone_naephone', // TODO: 출시용 패키지 ID
+      iosAppId: ''                                    // TODO: App Store 숫자 ID (예: '1234567890')
+    };
+    // ────────────────────────────────────────────────────────────
+
+    var id = new URLSearchParams(location.search).get('id') || '';
+    var ua = navigator.userAgent || '';
+    var isIOS = /iPhone|iPad|iPod/i.test(ua) || (/(Macintosh)/i.test(ua) && 'ontouchend' in document);
+    var isAndroid = /Android/i.test(ua);
+    var isMobile = isIOS || isAndroid;
+
+    var playUrl = 'https://play.google.com/store/apps/details?id=' + CONFIG.androidPackage;
+    var appStoreUrl = CONFIG.iosAppId
+      ? 'https://apps.apple.com/app/id' + CONFIG.iosAppId
+      : 'https://www.apple.com/app-store/';
+
+    document.getElementById('code').textContent = id ? id : '연결 코드가 없습니다';
+    document.getElementById('androidBtn').href = playUrl;
+    document.getElementById('iosBtn').href = appStoreUrl;
+
+    // 기기에 맞는 스토어 버튼만 노출
+    if (isIOS) document.getElementById('androidBtn').classList.add('hidden');
+    else if (isAndroid) document.getElementById('iosBtn').classList.add('hidden');
+
+    if (!isMobile) {
+      document.getElementById('openBtn').classList.add('hidden');
+      document.getElementById('deskHint').classList.remove('hidden');
+      document.getElementById('deskCode').textContent = id;
+    }
+
+    function openApp() {
+      if (!id) return;
+      // 앱이 설치돼 있으면 딥링크로 열리고, 없으면 아무 일도 없으므로
+      // 사용자는 아래 스토어 버튼으로 내려받으면 됩니다.
+      window.location.href = CONFIG.scheme + '://room?id=' + encodeURIComponent(id);
+    }
+    document.getElementById('openBtn').addEventListener('click', openApp);
+
+    // 모바일이면 진입 시 앱 열기 자동 시도
+    if (isMobile && id) setTimeout(openApp, 500);
+  </script>
+</body>
+</html>
